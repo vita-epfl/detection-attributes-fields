@@ -24,12 +24,9 @@ class Jaad(openpifpaf.datasets.DataModule):
     test_set = 'test'
 
     # Tasks
-    attributes = {
-        JaadType.PEDESTRIAN: ['detection'],
-    }
+    pedestrian_attributes = ['detection']
     occlusion_level = 1
     upsample_stride = 1
-    head_metas = None
 
     # Pre-processing
     image_width = 961
@@ -41,7 +38,15 @@ class Jaad(openpifpaf.datasets.DataModule):
 
     def __init__(self):
         super().__init__()
+        self.compute_attributes()
         self.compute_head_metas()
+
+
+    @classmethod
+    def compute_attributes(cls):
+        cls.attributes = {
+            JaadType.PEDESTRIAN: cls.pedestrian_attributes,
+        }
 
 
     @classmethod
@@ -82,8 +87,8 @@ class Jaad(openpifpaf.datasets.DataModule):
 
         # Tasks
         group.add_argument('--jaad-pedestrian-attributes',
-                           default=cls.attributes, nargs='+',
-                           help='list of attributes to consider')
+                           default=cls.pedestrian_attributes, nargs='+',
+                           help='list of attributes to consider for pedestrians')
         group.add_argument('--jaad-occlusion-level',
                            default=cls.occlusion_level, type=int,
                            choices=[0, 1, 2],
@@ -128,9 +133,8 @@ class Jaad(openpifpaf.datasets.DataModule):
         cls.test_set = args.jaad_testing_set
 
         # Tasks
-        cls.attributes = {
-            JaadType.PEDESTRIAN: args.jaad_pedestrian_attributes,
-        }
+        cls.pedestrian_attributes = args.jaad_pedestrian_attributes
+        cls.compute_attributes()
         cls.occlusion_level = args.jaad_occlusion_level
         cls.upsample_stride = args.jaad_head_upsample
         cls.compute_head_metas()
@@ -189,6 +193,7 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.train_set,
             subset=self.subset,
             preprocess=self._train_preprocess(),
+            original_annotations=False,
         )
         return torch.utils.data.DataLoader(
             train_data,
@@ -207,6 +212,7 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.val_set,
             subset=self.subset,
             preprocess=self._train_preprocess(),
+            original_annotations=False,
         )
         return torch.utils.data.DataLoader(
             val_data,
@@ -225,6 +231,7 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.test_set,
             subset=self.subset,
             preprocess=self._eval_preprocess(),
+            original_annotations=True,
         )
         return torch.utils.data.DataLoader(
             eval_data,

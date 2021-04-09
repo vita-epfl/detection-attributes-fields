@@ -88,9 +88,6 @@ class InstanceDecoder(openpifpaf.decoder.decoder.Decoder):
 
     def __call__(self, fields, initial_annotations=None):
         start = time.perf_counter()
-        #if not initial_annotations:
-        #    initial_annotations = []
-        #LOG.debug('initial annotations = %d', len(initial_annotations))
 
         # Field S
         s_meta = [meta for meta in self.attribute_metas

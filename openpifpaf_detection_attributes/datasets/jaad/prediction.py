@@ -11,25 +11,26 @@ class JaadPedestrianPrediction(prediction.Prediction):
 
     def inverse_transform(self, meta):
         pred = copy.deepcopy(self)
+        atts = pred.attributes
 
         # Horizontal flip
         if meta['hflip']:
             w = meta['width_height'][0]
-            if pred['center'] is not None:
-                pred['center'][0] = -pred['center'][0] + (w - 1)
-            pred['bag_left_side'], pred['bag_right_side'] = (
-                pred['bag_right_side'], pred['bag_left_side'])
-            pred['pose_left'], pred['pose_right'] = (
-                pred['pose_right'], pred['pose_left'])
+            if atts['center'] is not None:
+                atts['center'][0] = -atts['center'][0] + (w - 1)
+            atts['bag_left_side'], atts['bag_right_side'] = (
+                atts['bag_right_side'], atts['bag_left_side'])
+            atts['pose_left'], atts['pose_right'] = (
+                atts['pose_right'], atts['pose_left'])
 
         # Offset and scale
-        if pred['center'] is not None:
-            pred['center'][0] = (pred['center'][0] + meta['offset'][0]) / meta['scale'][0]
-            pred['center'][1] = (pred['center'][1] + meta['offset'][1]) / meta['scale'][1]
-        if pred['width'] is not None:
-            pred['width'] /= meta['scale'][0]
-        if pred['height'] is not None:
-            pred['height'] /= meta['scale'][1]
+        if atts['center'] is not None:
+            atts['center'][0] = (atts['center'][0] + meta['offset'][0]) / meta['scale'][0]
+            atts['center'][1] = (atts['center'][1] + meta['offset'][1]) / meta['scale'][1]
+        if atts['width'] is not None:
+            atts['width'] /= meta['scale'][0]
+        if atts['height'] is not None:
+            atts['height'] /= meta['scale'][1]
 
         return pred
 

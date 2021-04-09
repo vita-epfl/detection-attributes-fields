@@ -1,3 +1,4 @@
+import copy
 import logging
 import math
 from typing import List
@@ -30,7 +31,7 @@ def compute_iou(pred_c, pred_w, pred_h, gt_box):
     return iou
 
 
-def compute_ap(self, stats):
+def compute_ap(stats):
     tps = [tp for _, tp in sorted(zip(stats['score'],
                                       stats['tp']),
                                   key=lambda pair: pair[0],
@@ -83,112 +84,121 @@ def average_precision(rec, prec):
 
 class InstanceDetection(openpifpaf.metric.base.Base):
     def __init__(self, attribute_metas: List[AttributeMeta]):
-        self.attribute_metas = attribute_metas
+        self.attribute_metas = [am for am in attribute_metas
+                                if ((am.attribute == 'confidence')
+                                    or (am.group != 'detection'))]
         assert len(self.attribute_metas) > 0
-        self.attributes = [att for att in self.attribute_metas
-                           if ((att.attribute == 'confidence')
-                               or (att.group != 'detection'))]
 
         self.det_stats = {}
-        for attribute in self.attributes:
-            if attribute.is_classification:
-                n_classes = max(attribute.n_channels, 2)
+        for att_meta in self.attribute_metas:
+            if att_meta.is_classification:
+                n_classes = max(att_meta.n_channels, 2)
             else:
                 n_classes = 10
-            self.det_stats[attribute['attribute']] = {'n_classes': n_classes}
+            self.det_stats[att_meta.attribute] = {'n_classes': n_classes}
             for cls in range(n_classes):
-                self.det_stats[attribute['attribute']][cls] = {
+                self.det_stats[att_meta.attribute][cls] = {
                     'n_gt': 0, 'score': [], 'tp': [], 'fp': []}
 
 
     def accumulate(self, predictions, image_meta, *, ground_truth=None):
-        for attribute in self.attributes:
-            self.accumulate_attribute(attribute, predictions, image_meta,
+        for att_meta in self.attribute_metas:
+            self.accumulate_attribute(att_meta, predictions, image_meta,
                                       ground_truth=ground_truth)
 
 
-    def accumulate_attribute(self, attribute, predictions, image_meta, *,
+    def accumulate_attribute(self, attribute_meta, predictions, image_meta, *,
                              ground_truth=None):
-        for cls in range(self.det_stats[attribute['attribute']]['n_classes']):
-            det_stats = self.det_stats[attribute['attribute']][cls]
+        for cls in range(self.det_stats[attribute_meta.attribute]['n_classes']):
+            det_stats = self.det_stats[attribute_meta.attribute][cls]
 
             # Initialize ground truths
             gt_match = {}
             for gt in ground_truth:
                 if (
                     gt['ignore_eval']
-                    or gt[attribute['attribute']] is None
-                    or (not attribute['is_classification'])
-                    or int(gt[attribute['attribute']]) == cls
+                    or gt[attribute_meta.attribute] is None
+                    or (not attribute_meta.is_classification)
+                    or int(gt[attribute_meta.attribute]) == cls
                 ):
                     gt_match[gt['id']] = False
                     if (
                         (not gt['ignore_eval'])
-                        and (gt[attribute['attribute']] is not None)
+                        and (gt[attribute_meta.attribute] is not None)
                     ):
                         det_stats['n_gt'] += 1
 
             # Rank predictions based on confidences
             ranked_preds = []
-            for pred in prediction:
-                if attribute['attribute'] in pred:
+            for pred in predictions:
+                if (
+                    (attribute_meta.attribute in pred.attributes)
+                    and (pred.attributes[attribute_meta.attribute] is not None)
+                ):
                     rpred = copy.deepcopy(pred)
-                    pred_score = pred[attribute['attribute']]
+                    pred_score = pred.attributes[attribute_meta.attribute]
+                    pred_conf = pred.attributes['confidence']
                     if (
-                        (attribute['attribute'] == 'confidence')
-                        or (not attribute['is_classification'])
+                        (attribute_meta.attribute == 'confidence')
+                        or (not attribute_meta.is_classification)
                     ):
-                        rpred['score'] = pred['confidence']
+                        rpred.attributes['score'] = pred_conf
                     elif (
-                        attribute['is_classification']
-                        and (attribute['n_channels'] == 1)
+                        attribute_meta.is_classification
+                        and (attribute_meta.n_channels == 1)
                     ):
-                        rpred['score'] = (
+                        rpred.attributes['score'] = (
                             (cls*pred_score + (1-cls)*(1.-pred_score))
-                            * pred['confidence']
+                            * pred_conf
                         )
                     elif (
-                        attribute['is_classification']
-                        and (attribute['n_channels'] > 1)
+                        attribute_meta.is_classification
+                        and (attribute_meta.n_channels > 1)
                     ):
-                        rpred['score'] = pred_score[cls] * pred['confidence']
+                        rpred.attributes['score'] = pred_score[cls] * pred_conf
                     ranked_preds.append(rpred)
-            ranked_preds.sort(key=lambda x:x['score'], reverse=True)
+            ranked_preds.sort(key=lambda x:x.attributes['score'], reverse=True)
 
             # Match predictions with closest groud truths
             for pred in ranked_preds:
                 max_iou = -1.
                 match = None
-                for gt in gt_match:
-                    if ('width' in pred) and ('height' in pred):
-                        iou = compute_iou(pred['center'], pred['width'],
-                                          pred['height'], gt['box'])
+                for gt in ground_truth:
+                    if (
+                        (gt['id'] in gt_match)
+                        and ('width' in pred.attributes)
+                        and ('height' in pred.attributes)
+                    ):
+                        iou = compute_iou(pred.attributes['center'], pred.attributes['width'],
+                                          pred.attributes['height'], gt['box'])
                     else:
                         iou = 0.
                     if (iou > 0.5) and (iou >= max_iou):
                         if (
-                            (gt[attribute['attribute']] is None)
-                            or attribute.is_classification
-                            or (abs(gt[attribute['attribute']]
-                                -pred[attribute['attribute']]) <= (cls+1)*.5)
+                            (gt[attribute_meta.attribute] is None)
+                            or attribute_meta.is_classification
+                            or (abs(gt[attribute_meta.attribute]
+                                -pred.attributes[attribute_meta.attribute]) <= (cls+1)*.5)
                         ):
                             max_iou = iou
                             match = gt
 
                 # Classify predictions as True Positives or False Positives
                 if match is not None:
-                    if ((not match['ignore_eval'])
-                        and (match[attribute['attribute']] is not None)):
-                        if not gt_match['box'][match]:
+                    if (
+                        (not match['ignore_eval'])
+                        and (match[attribute_meta.attribute] is not None)
+                    ):
+                        if not gt_match[match['id']]:
                             # True positive
-                            det_stats['score'].append(pred['score'])
+                            det_stats['score'].append(pred.attributes['score'])
                             det_stats['tp'].append(1)
                             det_stats['fp'].append(0)
 
                             gt_match[match['id']] = True
                         else:
                             # False positive (multiple detections)
-                            det_stats['score'].append(pred['score'])
+                            det_stats['score'].append(pred.attributes['score'])
                             det_stats['tp'].append(0)
                             det_stats['fp'].append(1)
                     else:
@@ -196,7 +206,7 @@ class InstanceDetection(openpifpaf.metric.base.Base):
                         pass
                 else:
                     # False positive
-                    det_stats['score'].append(pred['score'])
+                    det_stats['score'].append(pred.attributes['score'])
                     det_stats['tp'].append(0)
                     det_stats['fp'].append(1)
 
@@ -206,29 +216,29 @@ class InstanceDetection(openpifpaf.metric.base.Base):
         stats = []
 
         att_aps = []
-        for attribute in self.attributes:
+        for att_meta in self.attribute_metas:
             cls_aps = []
-            for cls in range(self.det_stats[attribute['attribute']]['n_classes']):
-                cls_ap = compute_ap(self.det_stats[attribute['attribute']][cls])
+            for cls in range(self.det_stats[att_meta.attribute]['n_classes']):
+                cls_ap = compute_ap(self.det_stats[att_meta.attribute][cls])
                 cls_aps.append(cls_ap)
-            if attribute['attribute'] == 'confidence':
+            if att_meta.attribute == 'confidence':
                 text_labels.append('detection_AP')
                 stats.append(cls_aps[1])
                 att_aps.append(cls_aps[1])
-                LOG.info('detection AP = {}'.format(cls_aps[1]))
+                LOG.info('detection AP = {}'.format(cls_aps[1]*100))
             else:
-                text_labels.append(attribute['attribute'] + '_AP')
+                text_labels.append(att_meta.attribute + '_AP')
                 att_ap = sum(cls_aps) / len(cls_aps)
                 stats.append(att_ap)
                 att_aps.append(att_ap)
-                LOG.info('{} AP = {}'.format(attribute['attribute'], att_ap))
+                LOG.info('{} AP = {}'.format(att_meta.attribute, att_ap*100))
         text_labels.append('attribute_mAP')
         map = sum(att_aps) / len(att_aps)
         stats.append(map)
-        LOG.info('attribute mAP = {}'.format(map))
+        LOG.info('attribute mAP = {}'.format(map*100))
 
         data = {
-            'text_labels': self.text_labels,
+            'text_labels': text_labels,
             'stats': stats,
         }
         return data

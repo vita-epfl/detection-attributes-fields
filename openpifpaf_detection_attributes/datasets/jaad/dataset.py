@@ -29,7 +29,7 @@ class JaadDataset(torch.utils.data.Dataset):
     """
 
     def __init__(self, root_dir, split, subset, *,
-                 preprocess=None):
+                 preprocess=None, original_annotations=False):
         super().__init__()
         sys.path.append(root_dir)
         from jaad_data import JAAD
@@ -51,6 +51,7 @@ class JaadDataset(torch.utils.data.Dataset):
             raise ValueError('unknown split {}'.format(split))
         self.split = split
         self.preprocess = preprocess or transforms.EVAL_TRANSFORM
+        self.original_annotations = original_annotations
 
         self.db = jaad.generate_database()
         self.idx_to_ids = []
@@ -189,8 +190,10 @@ class JaadDataset(torch.utils.data.Dataset):
         }
 
         # Preprocess image and annotations
-        image, anns, meta = self.preprocess(image, anns, meta)
-
+        if self.original_annotations:
+            image, _, meta = self.preprocess(image, anns, meta)
+        else:
+            image, anns, meta = self.preprocess(image, anns, meta)
         LOG.debug(meta)
 
         return image, anns, meta

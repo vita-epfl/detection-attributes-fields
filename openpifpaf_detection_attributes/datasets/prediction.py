@@ -14,10 +14,8 @@ class Prediction(openpifpaf.annotation.Base):
     def __init__(self, **kwargs):
         self.attributes = {}
         for meta in self.attribute_metas:
-            if meta.attribute in kwargs:
-                self.attributes[meta.attribute] = kwargs[meta.attribute]
-            else:
-                self.attributes[meta.attribute] = None
+            if meta['attribute'] in kwargs:
+                self.attributes[meta['attribute']] = kwargs[meta['attribute']]
 
 
     @abstractmethod
