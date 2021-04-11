@@ -70,7 +70,7 @@ As such, it benefits from all the core capabilities offered by OpenPifPaf, and o
 
 All the commands can be run through OpenPifPaf's interface using subparsers.
 Help can be obtained for any of them with the option `--help`.
-More information can be found in [OpenPifPaf documentation](https://vita-epfl.github.io/openpifpaf/index.html).
+More information can be found in [OpenPifPaf documentation](https://openpifpaf.github.io/intro.html).
 
 
 ## Training
