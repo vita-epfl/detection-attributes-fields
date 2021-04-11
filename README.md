@@ -1,9 +1,10 @@
-# detection-fields-attributes
-
+# Object Detection and Attribute Recognition with Fields
 
 A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestrian Attributes for Autonomous Vehicles](https://arxiv.org/abs/2012.02647) by Taylor Mordan, Matthieu Cord, Patrick Pérez and Alexandre Alahi.
 
+
 #### Abstract
+
 > Detecting 32 Pedestrian Attributes for Autonomous Vehicles
 >
 >Pedestrians are arguably one of the most safety-critical road users to consider for autonomous vehicles in urban areas.
@@ -16,47 +17,161 @@ A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestri
 >We solve it by normalizing the gradients coming from different objective functions when they join at the fork in the network architecture during the backward pass, referred to as fork-normalization.
 >Experimental validation is performed on JAAD, a dataset providing numerous attributes for pedestrian analysis from autonomous vehicles, and shows competitive detection and attribute recognition results, as well as a more stable MTL training.
 
-![detection_schema](imgs/detection_attributes.pdf)
+![detection_schema](docs/detection_attributes.png)
+
+The model MTL-Fields learns multiple fields for both object detection and attribute recognition in a Multi-Task Learning way.
+Learning is done on full images with a dedicated field for each task, and predictions are obtained at inference through a decoding post-processing step that yields a bounding box and all attributes for each detected instance.
+This model is applied on dataset JAAD to detect up to 32 pedestrian attributes in an autonomous vehicle scenario.
+
+The model MTL-Fields also contains a normalization of gradients during backward to solve gradient scale issues when learning numerous tasks.
+
+
+### Table of Contents
+
+- [Installation](#installation)
+- [Dataset](#dataset)
+- [Interfaces](#interfaces)
+- [Training](#training)
+- [Evaluation](#evaluation)
+- [Project structure](#project-structure)
+- [License](#license)
+- [Citation](#citation)
 
 
 ## Installation
 
-This project requires to install the dev branch of [OpenPifPaf](https://vita-epfl.github.io/openpifpaf/dev/intro.html) first.
+Clone this repository in order to use it.
+```
+# To clone the repository using HTTPS
+git clone https://github.com/vita-epfl/detection-attributes-fields
+cd detection-attributes-fields/
+```
 
-Dataset [JAAD](http://data.nvision2.eecs.yorku.ca/JAAD_dataset/) is used to train and evaluate the model.
+All dependencies can be found in the `requirements.txt` file.
+```
+# To install dependencies
+pip3 install -r requirements.txt
+```
 
-This project has been tested with python==3.7 and pytorch==1.7.1.
+This project has been tested with Python 3.7.7 and PyTorch 1.8.1.
 
 
-## Interfaces  
+## Dataset
 
-This project is build as a plugin module for OpenPifPaf, and as such, should benefit from all the functionalities offered by it.
+This project uses dataset [JAAD](http://data.nvision2.eecs.yorku.ca/JAAD_dataset/) for training and evaluation.
 
-All the commands can be run through openpifpaf interface using subparsers, as described in its documentation.
+Please refer to JAAD documentation to download the dataset.
 
-For example, training on JAAD can be run with the command:
+
+## Interfaces
+
+This project is implemented as an [OpenPifPaf](https://github.com/openpifpaf/openpifpaf) plugin module.
+As such, it benefits from all the core capabilities offered by OpenPifPaf, and only implements the additional functions it needs.
+
+All the commands can be run through OpenPifPaf's interface using subparsers.
+Help can be obtained for any of them with the option `--help`.
+More information can be found in [OpenPifPaf documentation](https://vita-epfl.github.io/openpifpaf/index.html).
+
+
+## Training
+
+Training is done using the `openpifpaf.train` subparser.
+
+Training on JAAD with all attributes can be run with the command:
 ```
 python3 -m openpifpaf.train \
-  --dataset='jaad' --jaad-root-dir='<JAAD folder>' --jaad-training-set='train' --jaad-validation-set='val' \
-  --epochs=5 \
-  --batch-size=4 \
-  --log-interval=10 --val-interval=1 \
-  --lr=5e-4 --momentum=0.95 --lr-warm-up-start-epoch=-1 \
-  --weight-decay=5e-4 \
-  --jaad-pedestrian-attributes all \
-  --basenet=fn-resnet50 \
+  --output <path/to/model.pt> \
+  --dataset jaad \
+  --jaad-root-dir <path/to/jaad/folder/> \
+  --jaad-subset default \
+  --jaad-training-set train \
+  --jaad-validation-set val \
+  --log-interval 10 \
+  --val-interval 1 \
+  --epochs 5 \
+  --batch-size 4 \
+  --lr 0.0005 \
+  --lr-warm-up-start-epoch -1 \
+  --weight-decay 5e-4 \
+  --momentum 0.95 \
+  --basenet fn-resnet50 \
   --pifpaf-pretraining \
-  --jaad-head-upsample=2 \
-  --fork-normalization-operation='power' --fork-normalization-duplicates=35 \
-  --detection-bias-prior=0.01 \
-  --attribute-regression-loss='l1' --attribute-focal-gamma=2 \
+  --detection-bias-prior 0.01 \
+  --jaad-head-upsample 2 \
+  --jaad-pedestrian-attributes all \
+  --fork-normalization-operation power \
+  --fork-normalization-duplicates 35 \
   --lambdas 7.0 7.0 7.0 7.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 \
+  --attribute-regression-loss l1 \
+  --attribute-focal-gamma 2 \
   --auto-tune-mtl
 ```
-or by selecting the appropriate arguments, if needed.
+
+Arguments should be modified appropriately if needed.
+More information about the options can be obtained with the command:
+```
+python3 -m openpifpaf.train --help
+```
+
+
+## Evaluation
+
+Evaluation of a checkpoint is done using the `openpifpaf.eval` subparser.
+
+Evaluation on JAAD with all attributes can be run with the command:
+```
+python3 -m openpifpaf.eval \
+  --output <path/to/outputs> \
+  --dataset jaad \
+  --jaad-root-dir <path/to/jaad/folder/> \
+  --jaad-subset default \
+  --jaad-testing-set test \
+  --checkpoint <path/to/checkpoint.pt> \
+  --batch-size 4 \
+  --jaad-head-upsample 2 \
+  --jaad-pedestrian-attributes all \
+  --fork-normalization-operation power \
+  --fork-normalization-duplicates 35 \
+  --head-consolidation 'filter_and_extend' \
+  --decoder-s-threshold 0.2 \
+  --decoder-optics-min-cluster-size 10 \
+  --decoder-optics-epsilon 5.0 \
+  --decoder-optics-cluster-threshold 0.5
+```
+
+Arguments should be modified appropriately if needed.
+More information about the options can be obtained with the command:
+```
+python3 -m openpifpaf.eval --help
+```
+
+
+## Project structure
+
+The code is organized as follows:
+```
+openpifpaf_detection_attributes/
+├── datasets/
+│   ├── jaad/
+│   ├── (+ common files for datasets)
+│   └── (add new datasets here)
+└── models/
+    ├── mtlfields/
+    ├── (+ common files for models)
+    └── (add new models here)
+```
+
+
+## License
+
+This project is built upon [Openpifpaf](https://openpifpaf.github.io/intro.html) and shares the AGPL Licence.
+
+This software is also available for commercial licensing via the EPFL Technology Transfer
+Office (https://tto.epfl.ch/, info.tto@epfl.ch).
 
 
 ## Citation
+
 If you use this project in your research, please cite the corresponding paper:
 ```text
 @article{mordan2020detecting,

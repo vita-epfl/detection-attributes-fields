@@ -1,0 +1,9 @@
+numpy
+cython
+matplotlib
+scikit-learn
+opencv-python
+torch
+torchvision
+thop
+openpifpaf>=0.12
