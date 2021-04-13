@@ -3,19 +3,27 @@ import logging
 
 import openpifpaf
 
-from .. import mtl_grad_norm
+from .. import mtl_grad_fork_norm
 
 
 LOG = logging.getLogger(__name__)
 
 
 class ForkNormNetwork(openpifpaf.network.basenetworks.BaseNetwork):
+    """Backbone network with fork-normalization before prediction head
+        networks.
+
+    Args:
+        name (str): Name of network.
+        backbone_name (str): Name of base network (without fork_normalization).
+    """
+
     pifpaf_pretraining = False
     fork_normalization_operation = 'accumulation'
     fork_normalization_duplicates = 1
 
 
-    def __init__(self, name, backbone_name):
+    def __init__(self, name: str, backbone_name: str):
         if self.pifpaf_pretraining:
             # Load pre-trained weights
             LOG.info('Loading weights from pifpaf pretrained model')
@@ -31,7 +39,7 @@ class ForkNormNetwork(openpifpaf.network.basenetworks.BaseNetwork):
                          out_features=backbone.out_features)
         self.backbone_name = backbone_name
         self.backbone = backbone
-        self.fork_normalization = mtl_grad_norm.MtlGradNorm(
+        self.fork_normalization = mtl_grad_fork_norm.MtlGradForkNorm(
             normalization=self.fork_normalization_operation,
             duplicates=self.fork_normalization_duplicates,
         )

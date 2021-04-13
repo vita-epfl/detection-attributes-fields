@@ -5,6 +5,8 @@ from .. import prediction
 
 
 class JaadPedestrianPrediction(prediction.Prediction):
+    """Prediction class for pedestrians from dataset JAAD."""
+    
     object_type = JaadType.PEDESTRIAN
     attribute_metas = JAAD_ATTRIBUTE_METAS[JaadType.PEDESTRIAN]
 

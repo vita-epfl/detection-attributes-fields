@@ -3,6 +3,8 @@ from typing import Dict
 
 
 class ObjectType(Enum):
+    """Enum type for categories of objects."""
+
     def __repr__(self):
         return '<%s.%s>' % (self.__class__.__name__, self.name)
 
@@ -14,12 +16,16 @@ class ObjectType(Enum):
         return obj
 
 
+"""List of object types for every dataset."""
 OBJECT_TYPES: Dict[str, ObjectType] = {}
+""".List of attribute meta information for every dataset and object type."""
 ATTRIBUTE_METAS: Dict[str, Dict[ObjectType, list]] = {}
 
 
 def get_attribute_metas(dataset: str,
                         attributes: Dict[ObjectType, list]):
+    assert dataset in OBJECT_TYPES
+    assert dataset in ATTRIBUTE_METAS
     att_metas = []
     for object_type in OBJECT_TYPES[dataset]:
         if (

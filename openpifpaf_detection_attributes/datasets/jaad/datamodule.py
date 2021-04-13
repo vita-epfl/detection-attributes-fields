@@ -13,6 +13,8 @@ from .. import metrics as eval_metrics
 
 
 class Jaad(openpifpaf.datasets.DataModule):
+    """DataModule for dataset JAAD."""
+    
     debug = False
     pin_memory = False
 

@@ -11,7 +11,14 @@ LOG = logging.getLogger(__name__)
 
 
 class AnnotationRescaler:
-    def __init__(self, stride, object_type):
+    """Rescale images and annotations based on stride of network.
+
+    Args:
+        stride (int): Factor to divide dimensions by.
+        object_type (ObjectType): Category of object annotated.
+    """
+
+    def __init__(self, stride: int, object_type: ObjectType):
         self.stride = stride
         self.object_type = object_type
 
@@ -30,6 +37,9 @@ class AnnotationRescaler:
 
     @abstractmethod
     def objects(self, anns):
+        """Rescale and return object annotations of given type.
+        Needs to be implemented for every object type.
+        """
         raise NotImplementedError
 
 
@@ -39,6 +49,13 @@ class AnnotationRescaler:
 
 
 class AttributeEncoder:
+    """Convert annotations to target feature maps.
+
+    Args:
+        meta (AttributeMeta): Description of the attribute.
+        rescaler (AnnotationRescaler): Rescaler corresponding to object type.
+    """
+
     def __init__(self,
                  meta: AttributeMeta,
                  rescaler: AnnotationRescaler = None,
@@ -54,6 +71,13 @@ class AttributeEncoder:
 
 
 class AttributeGenerator:
+    """Compute target feature map for an attribute.
+
+    Args:
+        config (AttributeEncoder): Meta information about how to handle the
+            attribute.
+    """
+
     rescaler_class = AnnotationRescaler
 
 
@@ -77,7 +101,9 @@ class AttributeGenerator:
 
     @abstractmethod
     def generate_encoding(self, objects, width_height, valid_area):
+        """Compute targets from annotations."""
         raise NotImplementedError
 
 
+"""List of generatpr for every dataset and object type."""
 ATTRIBUTE_GENERATORS: Dict[str, Dict[ObjectType, AttributeGenerator]] = {}

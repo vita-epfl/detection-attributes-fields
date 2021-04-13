@@ -12,6 +12,13 @@ LOG = logging.getLogger(__name__)
 
 
 class AttributeField(openpifpaf.network.heads.HeadNetwork):
+    """Pediction head network for attributes.
+
+    Args:
+        meta (AttributeMeta): Meta information on attribute to predict.
+        in_features (int): Number of features as input to the head network.
+    """
+
     # Convolutions
     detection_bias_prior = None
 

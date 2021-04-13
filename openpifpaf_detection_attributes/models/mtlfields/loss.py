@@ -10,6 +10,13 @@ LOG = logging.getLogger(__name__)
 
 
 class AttributeLoss(torch.nn.Module):
+    """Loss function for attribute fields.
+
+    Args:
+        head_net (AttributeField): Prediction head network corresponding to the
+            attribute.
+    """
+
     regression_loss = 'l1'
     focal_gamma = 0.0
 

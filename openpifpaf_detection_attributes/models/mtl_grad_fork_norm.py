@@ -4,7 +4,9 @@ import numpy as np
 import torch
 
 
-class GradientNormalization(torch.autograd.Function):
+class GradientForkNormalization(torch.autograd.Function):
+    """Autograd function for MTL gradient fork-normalization layer."""
+
     @staticmethod
     def forward(ctx, input_, normalization, duplicates):
         ctx.normalization = normalization
@@ -41,8 +43,20 @@ class GradientNormalization(torch.autograd.Function):
         return grad_input, None, None
 
 
-class MtlGradNorm(torch.nn.Module):
-    def __init__(self, normalization='accumulation', duplicates=1):
+class MtlGradForkNorm(torch.nn.Module):
+    """Multi-Task Learning Gradient Fork-Normalization layer.
+    Normalize gradients joining at a fork during backward (forward pass left
+        unchanged).
+
+    Args:
+        normalization (str): Type of normalization ('accumulation', 'average',
+            'power', 'sample', 'random').
+        duplicates (int): Max number of branches to normalize for.
+    """
+
+    def __init__(self,
+                 normalization (str) = 'accumulation',
+                 duplicates (int) = 1):
         super().__init__()
         if normalization not in ('accumulation', 'average', 'power',
                                  'sample', 'random'):
@@ -58,5 +72,5 @@ class MtlGradNorm(torch.nn.Module):
 
 
     def forward(self, input_):
-        return GradientNormalization.apply(
+        return GradientForkNormalization.apply(
             input_, self.normalization, self.duplicates)

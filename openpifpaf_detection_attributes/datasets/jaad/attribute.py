@@ -2,6 +2,7 @@ from .. import attribute
 
 
 class JaadType(attribute.ObjectType):
+    """Object types for JAAD."""
     PEDESTRIAN = ()
 
 

@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import Callable
 
 import openpifpaf
 from PIL import Image
@@ -17,19 +18,25 @@ LOG = logging.getLogger(__name__)
 
 
 class JaadDataset(torch.utils.data.Dataset):
-    """JAAD dataset <http://data.nvision2.eecs.yorku.ca/JAAD_dataset/>
+    """Dataset JAAD <http://data.nvision2.eecs.yorku.ca/JAAD_dataset/>.
 
     Args:
-        root_dir (string): Root directory of dataset.
-        split (string: 'train', 'val', 'test'): Split of dataset.
-        subset (string: 'default', 'all_videos', 'high_visibility'): Set of
+        root_dir (str): Root directory of dataset.
+        split (str: 'train', 'val', 'test'): Split of dataset.
+        subset (str: 'default', 'all_videos', 'high_visibility'): Set of
             videos to use.
-        preprocess (callable, optional): A function/transform that takes in the
+        preprocess (Callable): A function/transform that takes in the
             image and targets and transforms them.
+        original_annotations (bool): Keep or transform original annotations.
     """
 
-    def __init__(self, root_dir, split, subset, *,
-                 preprocess=None, original_annotations=False):
+    def __init__(self,
+                 root_dir: str,
+                 split: str,
+                 subset: str,
+                 *,
+                 preprocess: Callable = None,
+                 original_annotations: bool = False):
         super().__init__()
         sys.path.append(root_dir)
         from jaad_data import JAAD

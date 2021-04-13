@@ -7,6 +7,8 @@ from .attribute import ObjectType
 
 
 class Prediction(openpifpaf.annotation.Base):
+    """Prediction output for a detected instance."""
+
     object_type = None
     attribute_metas = None
 
@@ -20,6 +22,9 @@ class Prediction(openpifpaf.annotation.Base):
 
     @abstractmethod
     def inverse_transform(self, meta):
+        """Inverse data augmentation to get predictions on original images.
+        Needs to be implemented for every type of object.
+        """
         raise NotImplementedError
 
 
@@ -27,4 +32,5 @@ class Prediction(openpifpaf.annotation.Base):
         return {'object_type': self.object_type, **self.attributes}
 
 
+"""List of predictions for every dataset and object type."""
 OBJECT_PREDICTIONS: Dict[str, Dict[ObjectType, Prediction]] = {}

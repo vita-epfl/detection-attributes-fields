@@ -83,6 +83,14 @@ def average_precision(rec, prec):
 
 
 class InstanceDetection(openpifpaf.metric.base.Base):
+    """Compute detection metrics from all detected instances for a list of
+        attributes.
+
+    Args:
+        attribute_metas (List[AttributeMeta]): list of meta information about
+            attributes.
+    """
+    
     def __init__(self, attribute_metas: List[AttributeMeta]):
         self.attribute_metas = [am for am in attribute_metas
                                 if ((am.attribute == 'confidence')

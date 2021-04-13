@@ -8,6 +8,8 @@ from .encoder import AnnotationRescaler, AttributeGenerator
 
 
 class BoxAnnotationRescaler(AnnotationRescaler):
+    """AnnotationRescaler for objects defined with bounding boxes."""
+
     def objects(self, anns):
         objs = [copy.deepcopy(ann) for ann in anns
                 if ann['object_type'] is self.object_type]
@@ -20,6 +22,8 @@ class BoxAnnotationRescaler(AnnotationRescaler):
 
 
 class BoxAttributeGenerator(AttributeGenerator):
+    """AttributeGenerator for objects defined with bounding boxes."""
+    
     rescaler_class = BoxAnnotationRescaler
 
 

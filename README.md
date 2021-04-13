@@ -20,7 +20,7 @@ A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestri
 ![detection_schema](docs/detection_attributes.png)
 
 The model MTL-Fields learns multiple fields for both object detection and attribute recognition in a Multi-Task Learning way.
-Learning is done on full images with a dedicated field for each task, and predictions are obtained at inference through a decoding post-processing step that yields a bounding box and all attributes for each detected instance.
+Learning is done on full images with dedicated field and image-wise loss function for each task, and predictions are obtained at inference through a post-processing instance-wise decoding step that yields a bounding box and all attributes for each detected instance.
 This model is applied on dataset JAAD to detect up to 32 pedestrian attributes in an autonomous vehicle scenario.
 
 The model MTL-Fields also contains a normalization of gradients during backward to solve gradient scale issues when learning numerous tasks.
@@ -132,7 +132,7 @@ python3 -m openpifpaf.eval \
   --jaad-pedestrian-attributes all \
   --fork-normalization-operation power \
   --fork-normalization-duplicates 35 \
-  --head-consolidation 'filter_and_extend' \
+  --head-consolidation filter_and_extend \
   --decoder-s-threshold 0.2 \
   --decoder-optics-min-cluster-size 10 \
   --decoder-optics-epsilon 5.0 \
@@ -164,7 +164,7 @@ openpifpaf_detection_attributes/
 
 ## License
 
-This project is built upon [Openpifpaf](https://openpifpaf.github.io/intro.html) and shares the AGPL Licence.
+This project is built upon [OpenPifPaf](https://openpifpaf.github.io/intro.html) and shares the AGPL Licence.
 
 This software is also available for commercial licensing via the EPFL Technology Transfer
 Office (https://tto.epfl.ch/, info.tto@epfl.ch).

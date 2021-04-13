@@ -15,6 +15,15 @@ LOG = logging.getLogger(__name__)
 
 
 class InstanceDecoder(openpifpaf.decoder.decoder.Decoder):
+    """Decoder to convert predicted fields to sets of instance detections.
+
+    Args:
+        dataset (str): Dataset name.
+        object_type (ObjectType): Type of object detected.
+        attribute_metas (List[AttributeMeta]): List of meta information about
+            predicted attributes.
+    """
+
     # General
     dataset = None
     object_type = None
