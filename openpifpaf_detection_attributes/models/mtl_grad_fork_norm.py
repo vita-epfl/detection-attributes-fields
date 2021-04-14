@@ -1,10 +1,9 @@
 from random import randrange
 
-import numpy as np
 import torch
 
 
-class GradientNormalization(torch.autograd.Function):
+class GradientForkNormalization(torch.autograd.Function):
     """Autograd function for MTL gradient fork-normalization layer."""
 
     @staticmethod
@@ -37,13 +36,14 @@ class GradientNormalization(torch.autograd.Function):
                 elif ctx.normalization == 'sample':
                     grad_input[n] = valid_gradout[randrange(len(valid_gradout))]
                 elif ctx.normalization == 'random':
-                    weights = np.random.dirichlet(np.ones(len(valid_gradout)))
-                    grad_input[n] = sum([g*w
+                    weights = torch.distributions.dirichlet.Dirichlet(
+                        torch.ones(len(valid_gradout))).sample()
+                    grad_input[n] = sum([g*w.item()
                         for g, w in zip(valid_gradout, weights)])
         return grad_input, None, None
 
 
-class MtlGradNorm(torch.nn.Module):
+class MtlGradForkNorm(torch.nn.Module):
     """Multi-Task Learning Gradient Fork-Normalization layer.
     Normalize gradients joining at a fork during backward (forward pass left
         unchanged).
@@ -72,5 +72,5 @@ class MtlGradNorm(torch.nn.Module):
 
 
     def forward(self, input_):
-        return GradientNormalization.apply(
+        return GradientForkNormalization.apply(
             input_, self.normalization, self.duplicates)

@@ -3,7 +3,7 @@ import logging
 
 import openpifpaf
 
-from .. import mtl_grad_norm
+from .. import mtl_grad_fork_norm
 
 
 LOG = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class ForkNormNetwork(openpifpaf.network.basenetworks.BaseNetwork):
                          out_features=backbone.out_features)
         self.backbone_name = backbone_name
         self.backbone = backbone
-        self.fork_normalization = mtl_grad_norm.MtlGradNorm(
+        self.fork_normalization = mtl_grad_fork_norm.MtlGradForkNorm(
             normalization=self.fork_normalization_operation,
             duplicates=self.fork_normalization_duplicates,
         )
