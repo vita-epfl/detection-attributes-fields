@@ -1,7 +1,9 @@
 import copy
+import json
 import logging
 import math
 from typing import List
+import zipfile
 
 import openpifpaf
 
@@ -11,19 +13,19 @@ from .headmeta import AttributeMeta
 LOG = logging.getLogger(__name__)
 
 
-def compute_iou(pred_c, pred_w, pred_h, gt_box):
+def compute_iou(pred_c, pred_w, pred_h, gt_c, gt_w, gt_h):
     inter_box = [
-        max(pred_c[0] - .5*pred_w, gt_box[0]),
-        max(pred_c[1] - .5*pred_h, gt_box[1]),
-        min(pred_c[0] + .5*pred_w, gt_box[0] + gt_box[2]),
-        min(pred_c[1] + .5*pred_h, gt_box[1] + gt_box[3])
+        max(pred_c[0] - .5*pred_w, gt_c[0] - .5*gt_w),
+        max(pred_c[1] - .5*pred_h, gt_c[1] - .5*gt_h),
+        min(pred_c[0] + .5*pred_w, gt_c[0] + .5*gt_w),
+        min(pred_c[1] + .5*pred_h, gt_c[1] + .5*gt_h)
     ]
     inter_area = (
         max(0., inter_box[2] - inter_box[0])
         * max(0., inter_box[3] - inter_box[1])
     )
     pred_area = pred_w * pred_h
-    gt_area = gt_box[2] * gt_box[3]
+    gt_area = gt_w * gt_h
     iou = (
         inter_area / (pred_area + gt_area - inter_area)
         if pred_area + gt_area - inter_area != 0 else 0.
@@ -90,7 +92,7 @@ class InstanceDetection(openpifpaf.metric.base.Base):
         attribute_metas (List[AttributeMeta]): list of meta information about
             attributes.
     """
-    
+
     def __init__(self, attribute_metas: List[AttributeMeta]):
         self.attribute_metas = [am for am in attribute_metas
                                 if ((am.attribute == 'confidence')
@@ -107,9 +109,17 @@ class InstanceDetection(openpifpaf.metric.base.Base):
             for cls in range(n_classes):
                 self.det_stats[att_meta.attribute][cls] = {
                     'n_gt': 0, 'score': [], 'tp': [], 'fp': []}
+        self.predictions = {}
 
 
     def accumulate(self, predictions, image_meta, *, ground_truth=None):
+        # Store predictions for writing to file
+        pred_data = []
+        for pred in predictions:
+            pred_data.append(pred.json_data())
+        self.predictions[image_meta['image_id']] = pred_data
+
+        # Compute metrics
         for att_meta in self.attribute_metas:
             self.accumulate_attribute(att_meta, predictions, image_meta,
                                       ground_truth=ground_truth)
@@ -124,15 +134,15 @@ class InstanceDetection(openpifpaf.metric.base.Base):
             gt_match = {}
             for gt in ground_truth:
                 if (
-                    gt['ignore_eval']
-                    or gt[attribute_meta.attribute] is None
+                    gt.ignore_eval
+                    or (gt.attributes[attribute_meta.attribute] is None)
                     or (not attribute_meta.is_classification)
-                    or int(gt[attribute_meta.attribute]) == cls
+                    or (int(gt.attributes[attribute_meta.attribute]) == cls)
                 ):
-                    gt_match[gt['id']] = False
+                    gt_match[gt.id] = False
                     if (
-                        (not gt['ignore_eval'])
-                        and (gt[attribute_meta.attribute] is not None)
+                        (not gt.ignore_eval)
+                        and (gt.attributes[attribute_meta.attribute] is not None)
                     ):
                         det_stats['n_gt'] += 1
 
@@ -173,19 +183,21 @@ class InstanceDetection(openpifpaf.metric.base.Base):
                 match = None
                 for gt in ground_truth:
                     if (
-                        (gt['id'] in gt_match)
+                        (gt.id in gt_match)
                         and ('width' in pred.attributes)
                         and ('height' in pred.attributes)
                     ):
                         iou = compute_iou(pred.attributes['center'], pred.attributes['width'],
-                                          pred.attributes['height'], gt['box'])
+                                          pred.attributes['height'],
+                                          gt.attributes['center'], gt.attributes['width'],
+                                          gt.attributes['height'])
                     else:
                         iou = 0.
                     if (iou > 0.5) and (iou >= max_iou):
                         if (
-                            (gt[attribute_meta.attribute] is None)
+                            (gt.attributes[attribute_meta.attribute] is None)
                             or attribute_meta.is_classification
-                            or (abs(gt[attribute_meta.attribute]
+                            or (abs(gt.attributes[attribute_meta.attribute]
                                 -pred.attributes[attribute_meta.attribute]) <= (cls+1)*.5)
                         ):
                             max_iou = iou
@@ -194,16 +206,16 @@ class InstanceDetection(openpifpaf.metric.base.Base):
                 # Classify predictions as True Positives or False Positives
                 if match is not None:
                     if (
-                        (not match['ignore_eval'])
-                        and (match[attribute_meta.attribute] is not None)
+                        (not match.ignore_eval)
+                        and (match.attributes[attribute_meta.attribute] is not None)
                     ):
-                        if not gt_match[match['id']]:
+                        if not gt_match[match.id]:
                             # True positive
                             det_stats['score'].append(pred.attributes['score'])
                             det_stats['tp'].append(1)
                             det_stats['fp'].append(0)
 
-                            gt_match[match['id']] = True
+                            gt_match[match.id] = True
                         else:
                             # False positive (multiple detections)
                             det_stats['score'].append(pred.attributes['score'])
@@ -253,4 +265,14 @@ class InstanceDetection(openpifpaf.metric.base.Base):
 
 
     def write_predictions(self, filename, *, additional_data=None):
-        raise NotImplementedError
+        with open(filename + '.pred.json', 'w') as f:
+            json.dump(self.predictions, f)
+        LOG.info('wrote %s.pred.json', filename)
+        with zipfile.ZipFile(filename + '.zip', 'w') as myzip:
+            myzip.write(filename + '.pred.json', arcname='predictions.json')
+        LOG.info('wrote %s.zip', filename)
+
+        if additional_data:
+            with open(filename + '.pred_meta.json', 'w') as f:
+                json.dump(additional_data, f)
+            LOG.info('wrote %s.pred_meta.json', filename)

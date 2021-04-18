@@ -10,6 +10,7 @@ import torch
 import torchvision
 
 from .attribute import JaadType
+from .. import prediction
 
 
 LOG = logging.getLogger(__name__)
@@ -77,6 +78,10 @@ class NormalizeAnnotations(openpifpaf.transforms.Preprocess):
         anns = copy.deepcopy(anns)
 
         for ann in anns:
+            if isinstance(ann, prediction.Prediction):
+                # Already converted to an annotation type
+                continue
+
             if ann['object_type'] is JaadType.PEDESTRIAN:
                 ann['box'] = np.asarray(ann['box'], dtype=np.float32)
                 ann['center'] = np.asarray(ann['center'], dtype=np.float32)
@@ -291,6 +296,19 @@ class HFlip(openpifpaf.transforms.Preprocess):
         meta['hflip'] = True
         meta['valid_area'][0] = -(meta['valid_area'][0] + meta['valid_area'][2]) + w
 
+        return image, anns, meta
+
+
+class ToAnnotations(openpifpaf.transforms.Preprocess):
+    def __init__(self, object_predictions):
+        self.object_predictions = object_predictions
+
+
+    def __call__(self, image, anns, meta):
+        anns = [
+            self.object_predictions[ann['object_type']](**ann)
+            for ann in anns
+        ]
         return image, anns, meta
 
 

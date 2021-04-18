@@ -10,11 +10,12 @@ from .. import attribute
 from .. import encoder
 from .. import headmeta
 from .. import metrics as eval_metrics
+from .. import prediction
 
 
 class Jaad(openpifpaf.datasets.DataModule):
     """DataModule for dataset JAAD."""
-    
+
     debug = False
     pin_memory = False
 
@@ -185,6 +186,7 @@ class Jaad(openpifpaf.datasets.DataModule):
     def _eval_preprocess(self):
         return openpifpaf.transforms.Compose([
             *self._common_preprocess_op(),
+            transforms.ToAnnotations(prediction.OBJECT_PREDICTIONS['jaad']),
             transforms.EVAL_TRANSFORM,
         ])
 
@@ -195,7 +197,6 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.train_set,
             subset=self.subset,
             preprocess=self._train_preprocess(),
-            original_annotations=False,
         )
         return torch.utils.data.DataLoader(
             train_data,
@@ -214,7 +215,6 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.val_set,
             subset=self.subset,
             preprocess=self._train_preprocess(),
-            original_annotations=False,
         )
         return torch.utils.data.DataLoader(
             val_data,
@@ -233,7 +233,7 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.test_set,
             subset=self.subset,
             preprocess=self._eval_preprocess(),
-            original_annotations=True,
+            original_annotations=True, # temp fix for visualization
         )
         return torch.utils.data.DataLoader(
             eval_data,

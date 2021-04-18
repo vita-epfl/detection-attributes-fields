@@ -6,13 +6,17 @@ from .. import prediction
 
 class JaadPedestrianPrediction(prediction.Prediction):
     """Prediction class for pedestrians from dataset JAAD."""
-    
+
     object_type = JaadType.PEDESTRIAN
     attribute_metas = JAAD_ATTRIBUTE_METAS[JaadType.PEDESTRIAN]
 
 
     def inverse_transform(self, meta):
         pred = copy.deepcopy(self)
+
+        if self.no_inversion:
+            return pred # temp fix for visualization
+
         atts = pred.attributes
 
         # Horizontal flip

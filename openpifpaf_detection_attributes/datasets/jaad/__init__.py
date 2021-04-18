@@ -4,7 +4,9 @@ from . import datamodule
 from .attribute import JaadType, JAAD_ATTRIBUTE_METAS
 from .encoder import JAAD_ATTRIBUTE_GENERATORS
 from .prediction import JAAD_OBJECT_PREDICTIONS
-from .. import attribute, encoder, prediction
+from .. import attribute
+from .. import encoder
+from .. import prediction
 
 
 def register():

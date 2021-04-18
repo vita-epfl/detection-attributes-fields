@@ -11,9 +11,12 @@ class Prediction(openpifpaf.annotation.Base):
 
     object_type = None
     attribute_metas = None
+    no_inversion = False # temp fix for visualization
 
 
     def __init__(self, **kwargs):
+        self.id = kwargs['id'] if 'id' in kwargs else None
+        self.ignore_eval = kwargs['ignore_eval'] if 'ignore_eval' in kwargs else None
         self.attributes = {}
         for meta in self.attribute_metas:
             if meta['attribute'] in kwargs:
@@ -29,7 +32,7 @@ class Prediction(openpifpaf.annotation.Base):
 
 
     def json_data(self):
-        return {'object_type': self.object_type, **self.attributes}
+        return {'object_type': self.object_type.name, **self.attributes}
 
 
 """List of predictions for every dataset and object type."""

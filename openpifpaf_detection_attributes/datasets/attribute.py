@@ -18,7 +18,7 @@ class ObjectType(Enum):
 
 """List of object types for every dataset."""
 OBJECT_TYPES: Dict[str, ObjectType] = {}
-""".List of attribute meta information for every dataset and object type."""
+"""List of attribute meta information for every dataset and object type."""
 ATTRIBUTE_METAS: Dict[str, Dict[ObjectType, list]] = {}
 
 

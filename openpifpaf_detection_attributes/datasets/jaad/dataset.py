@@ -8,9 +8,6 @@ from PIL import Image
 import torch.utils.data
 
 from .attribute import JaadType
-
-
-
 from . import transforms
 
 
@@ -36,7 +33,7 @@ class JaadDataset(torch.utils.data.Dataset):
                  subset: str,
                  *,
                  preprocess: Callable = None,
-                 original_annotations: bool = False):
+                 original_annotations: bool = False): # temp fix for visualization
         super().__init__()
         sys.path.append(root_dir)
         from jaad_data import JAAD
@@ -67,7 +64,7 @@ class JaadDataset(torch.utils.data.Dataset):
                 self.idx_to_ids.append({
                     'video_name': vid_id,
                     'image_name': '{:05d}.png'.format(img_id),
-                    'image_id': img_id,
+                    'frame_id': img_id,
                 })
 
         LOG.info('JAAD {0} {1} images: {2}'.format(self.subset, self.split,
@@ -84,7 +81,7 @@ class JaadDataset(torch.utils.data.Dataset):
         # Annotations
         anns = []
         for ped_id in self.db[ids['video_name']]['ped_annotations']:
-            if ids['image_id'] not in (self.db[ids['video_name']]
+            if ids['frame_id'] not in (self.db[ids['video_name']]
                                               ['ped_annotations']
                                               [ped_id]
                                               ['frames']):
@@ -92,7 +89,7 @@ class JaadDataset(torch.utils.data.Dataset):
             seq_id = (self.db[ids['video_name']]
                              ['ped_annotations']
                              [ped_id]
-                             ['frames']).index(ids['image_id'])
+                             ['frames']).index(ids['frame_id'])
 
             ped = {}
             ped['object_type'] = JaadType.PEDESTRIAN
@@ -166,8 +163,8 @@ class JaadDataset(torch.utils.data.Dataset):
                     ped['group_size'] = 3
             # Appearance
             if ('frames' in ped_anns['appearance']
-                    and ids['image_id'] in ped_anns['appearance']['frames']):
-                app_seq_id = ped_anns['appearance']['frames'].index(ids['image_id'])
+                    and ids['frame_id'] in ped_anns['appearance']['frames']):
+                app_seq_id = ped_anns['appearance']['frames'].index(ids['frame_id'])
             else:
                 app_seq_id = None
             for tag in ['baby', 'backpack', 'bag_elbow', 'bag_hand',
@@ -192,15 +189,19 @@ class JaadDataset(torch.utils.data.Dataset):
             'dataset_index': index,
             'video_name': ids['video_name'],
             'image_name': ids['image_name'],
-            'image_id': ids['image_id'],
+            'frame_id': ids['frame_id'],
+            'image_id': ids['video_name'] + '/' + ids['image_name'],
             'local_file_path': local_file_path,
         }
 
         # Preprocess image and annotations
-        if self.original_annotations:
-            image, _, meta = self.preprocess(image, anns, meta)
-        else:
-            image, anns, meta = self.preprocess(image, anns, meta)
+        image, anns, meta = self.preprocess(image, anns, meta)
+
+        if self.original_annotations: # temp fix for visualization
+            anns = [ann.inverse_transform(meta) for ann in anns]
+            for ann in anns:
+                ann.no_inversion = True
+
         LOG.debug(meta)
 
         return image, anns, meta
