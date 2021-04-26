@@ -43,7 +43,7 @@ class AttributeLoss(torch.nn.Module):
                 return torch.nn.BCEWithLogitsLoss(reduction='none')
             elif self.meta.n_channels > 1:
                 loss_module = torch.nn.CrossEntropyLoss(reduction='none')
-                return lambda x, t: loss_module(x, t.to(torch.long).squeeze()).unsqueeze(1)
+                return lambda x, t: loss_module(x, t.to(torch.long).squeeze(1)).unsqueeze(1)
             else:
                 raise Exception('error in attribute classification format:'
                                 ' size {}'.format(self.meta.n_channels))
