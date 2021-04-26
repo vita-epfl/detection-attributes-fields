@@ -1,6 +1,6 @@
 # Object Detection and Attribute Recognition with Fields
 
-A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestrian Attributes for Autonomous Vehicles](https://arxiv.org/abs/2012.02647) by Taylor Mordan, Matthieu Cord, Patrick Pérez and Alexandre Alahi.
+A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestrian Attributes for Autonomous Vehicles](https://arxiv.org/abs/2012.02647) by Taylor Mordan (EPFL/VITA), Matthieu Cord (Sorbonne Université, valeo.ai), Patrick Pérez (valeo.ai) and Alexandre Alahi (EPFL/VITA).
 
 
 #### Abstract
@@ -36,6 +36,7 @@ The model MTL-Fields also contains a normalization of gradients during backward 
 - [Project structure](#project-structure)
 - [License](#license)
 - [Citation](#citation)
+- [Acknowledgements](#acknowledgements)
 
 
 ## Installation
@@ -181,3 +182,8 @@ If you use this project in your research, please cite the corresponding paper:
   year={2020}
 }
 ```
+
+
+## Acknowledgements
+
+We would like to thank Valeo for funding our work, and Sven Kreiss for the OpenPifPaf Plugin architecture.
