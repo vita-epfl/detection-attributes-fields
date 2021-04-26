@@ -11,7 +11,6 @@ class Prediction(openpifpaf.annotation.Base):
 
     object_type = None
     attribute_metas = None
-    no_inversion = False # temp fix for visualization
 
 
     def __init__(self, **kwargs):

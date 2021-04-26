@@ -14,9 +14,6 @@ class JaadPedestrianPrediction(prediction.Prediction):
     def inverse_transform(self, meta):
         pred = copy.deepcopy(self)
 
-        if self.no_inversion:
-            return pred # temp fix for visualization
-
         atts = pred.attributes
 
         # Horizontal flip

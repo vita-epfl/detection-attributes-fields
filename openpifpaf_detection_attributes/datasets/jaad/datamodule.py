@@ -233,7 +233,6 @@ class Jaad(openpifpaf.datasets.DataModule):
             split=self.test_set,
             subset=self.subset,
             preprocess=self._eval_preprocess(),
-            original_annotations=True, # temp fix for visualization
         )
         return torch.utils.data.DataLoader(
             eval_data,

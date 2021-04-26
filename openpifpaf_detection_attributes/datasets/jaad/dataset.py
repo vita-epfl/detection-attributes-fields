@@ -24,7 +24,6 @@ class JaadDataset(torch.utils.data.Dataset):
             videos to use.
         preprocess (Callable): A function/transform that takes in the
             image and targets and transforms them.
-        original_annotations (bool): Keep or transform original annotations.
     """
 
     def __init__(self,
@@ -32,8 +31,7 @@ class JaadDataset(torch.utils.data.Dataset):
                  split: str,
                  subset: str,
                  *,
-                 preprocess: Callable = None,
-                 original_annotations: bool = False): # temp fix for visualization
+                 preprocess: Callable = None):
         super().__init__()
         sys.path.append(root_dir)
         from jaad_data import JAAD
@@ -55,7 +53,6 @@ class JaadDataset(torch.utils.data.Dataset):
             raise ValueError('unknown split {}'.format(split))
         self.split = split
         self.preprocess = preprocess or transforms.EVAL_TRANSFORM
-        self.original_annotations = original_annotations
 
         self.db = jaad.generate_database()
         self.idx_to_ids = []
@@ -196,11 +193,6 @@ class JaadDataset(torch.utils.data.Dataset):
 
         # Preprocess image and annotations
         image, anns, meta = self.preprocess(image, anns, meta)
-
-        if self.original_annotations: # temp fix for visualization
-            anns = [ann.inverse_transform(meta) for ann in anns]
-            for ann in anns:
-                ann.no_inversion = True
 
         LOG.debug(meta)
 

@@ -6,4 +6,4 @@ opencv-python
 torch
 torchvision
 thop
-openpifpaf>=0.12
+openpifpaf>=0.12.9
