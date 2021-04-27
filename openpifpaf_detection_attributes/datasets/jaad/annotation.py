@@ -1,11 +1,11 @@
 import copy
 
 from .attribute import JaadType, JAAD_ATTRIBUTE_METAS
-from .. import prediction
+from .. import annotation
 
 
-class JaadPedestrianPrediction(prediction.Prediction):
-    """Prediction class for pedestrians from dataset JAAD."""
+class JaadPedestrianAnnotation(annotation.AnnotationAttr):
+    """Annotation class for pedestrians from dataset JAAD."""
 
     object_type = JaadType.PEDESTRIAN
     attribute_metas = JAAD_ATTRIBUTE_METAS[JaadType.PEDESTRIAN]
@@ -38,6 +38,6 @@ class JaadPedestrianPrediction(prediction.Prediction):
         return pred
 
 
-JAAD_OBJECT_PREDICTIONS = {
-    JaadType.PEDESTRIAN: JaadPedestrianPrediction,
+JAAD_OBJECT_ANNOTATIONS = {
+    JaadType.PEDESTRIAN: JaadPedestrianAnnotation,
 }

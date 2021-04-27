@@ -6,11 +6,11 @@ import openpifpaf
 from .attribute import JaadType
 from .dataset import JaadDataset
 from . import transforms
+from .. import annotation
 from .. import attribute
 from .. import encoder
 from .. import headmeta
 from .. import metrics as eval_metrics
-from .. import prediction
 
 
 class Jaad(openpifpaf.datasets.DataModule):
@@ -186,7 +186,7 @@ class Jaad(openpifpaf.datasets.DataModule):
     def _eval_preprocess(self):
         return openpifpaf.transforms.Compose([
             *self._common_preprocess_op(),
-            transforms.ToAnnotations(prediction.OBJECT_PREDICTIONS['jaad']),
+            transforms.ToAnnotations(annotation.OBJECT_ANNOTATIONS['jaad']),
             transforms.EVAL_TRANSFORM,
         ])
 

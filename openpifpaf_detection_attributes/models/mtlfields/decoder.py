@@ -8,7 +8,9 @@ import openpifpaf
 from scipy.special import softmax
 
 from .. import optics
-from ...datasets import attribute, headmeta, prediction
+from ...datasets import annotation
+from ...datasets import attribute
+from ...datasets import headmeta
 
 
 LOG = logging.getLogger(__name__)
@@ -42,7 +44,7 @@ class InstanceDecoder(openpifpaf.decoder.decoder.Decoder):
         super().__init__()
         self.dataset = dataset
         self.object_type = object_type
-        self.prediction = prediction.OBJECT_PREDICTIONS[self.dataset][self.object_type]
+        self.annotation = annotation.OBJECT_ANNOTATIONS[self.dataset][self.object_type]
         for meta in attribute_metas:
             assert meta.dataset == self.dataset
             assert meta.object_type is self.object_type
@@ -143,7 +145,7 @@ class InstanceDecoder(openpifpaf.decoder.decoder.Decoder):
                                         meta, conf_field)
                 attributes[meta.attribute] = att
 
-            pred = self.prediction(**attributes)
+            pred = self.annotation(**attributes)
             predictions.append(pred)
 
         LOG.info('predictions %d, %.3fs',

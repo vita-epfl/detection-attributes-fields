@@ -10,7 +10,7 @@ import torch
 import torchvision
 
 from .attribute import JaadType
-from .. import prediction
+from .. import annotation
 
 
 LOG = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class NormalizeAnnotations(openpifpaf.transforms.Preprocess):
         anns = copy.deepcopy(anns)
 
         for ann in anns:
-            if isinstance(ann, prediction.Prediction):
+            if isinstance(ann, annotation.AnnotationAttr):
                 # Already converted to an annotation type
                 continue
 
@@ -300,13 +300,13 @@ class HFlip(openpifpaf.transforms.Preprocess):
 
 
 class ToAnnotations(openpifpaf.transforms.Preprocess):
-    def __init__(self, object_predictions):
-        self.object_predictions = object_predictions
+    def __init__(self, object_annotations):
+        self.object_annotations = object_annotations
 
 
     def __call__(self, image, anns, meta):
         anns = [
-            self.object_predictions[ann['object_type']](**ann)
+            self.object_annotations[ann['object_type']](**ann)
             for ann in anns
         ]
         return image, anns, meta

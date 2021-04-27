@@ -54,7 +54,7 @@ All dependencies can be found in the `requirements.txt` file.
 pip3 install -r requirements.txt
 ```
 
-This project has been tested with Python 3.7.7 and PyTorch 1.8.1.
+This project has been tested with Python 3.7.7, PyTorch 1.8.1 and CUDA 10.2.
 
 
 ## Dataset
@@ -70,13 +70,13 @@ This project is implemented as an [OpenPifPaf](https://github.com/openpifpaf/ope
 As such, it benefits from all the core capabilities offered by OpenPifPaf, and only implements the additional functions it needs.
 
 All the commands can be run through OpenPifPaf's interface using subparsers.
-Help can be obtained for any of them with the option `--help`.
+Help can be obtained for any of them with option `--help`.
 More information can be found in [OpenPifPaf documentation](https://openpifpaf.github.io/intro.html).
 
 
 ## Training
 
-Training is done using the `openpifpaf.train` subparser.
+Training is done using subparser `openpifpaf.train`.
 
 Training on JAAD with all attributes can be run with the command:
 ```
@@ -107,8 +107,8 @@ python3 -m openpifpaf.train \
   --attribute-focal-gamma 2 \
   --auto-tune-mtl
 ```
-
 Arguments should be modified appropriately if needed.
+
 More information about the options can be obtained with the command:
 ```
 python3 -m openpifpaf.train --help
@@ -117,7 +117,7 @@ python3 -m openpifpaf.train --help
 
 ## Evaluation
 
-Evaluation of a checkpoint is done using the `openpifpaf.eval` subparser.
+Evaluation of a checkpoint is done using subparser `openpifpaf.eval`.
 
 Evaluation on JAAD with all attributes can be run with the command:
 ```
@@ -131,16 +131,19 @@ python3 -m openpifpaf.eval \
   --batch-size 4 \
   --jaad-head-upsample 2 \
   --jaad-pedestrian-attributes all \
-  --fork-normalization-operation power \
-  --fork-normalization-duplicates 35 \
   --head-consolidation filter_and_extend \
   --decoder-s-threshold 0.2 \
   --decoder-optics-min-cluster-size 10 \
   --decoder-optics-epsilon 5.0 \
   --decoder-optics-cluster-threshold 0.5
 ```
-
 Arguments should be modified appropriately if needed.
+
+Using option `--write-predictions`, a json file with predictions can be written as an additional output.
+
+Using option `--show-final-image`, images with predictions displayed on them can be written in the folder given by option `--save-all <path/to/image/folder/>`.
+To also display ground truth annotations, add option `--show-final-ground-truth`.
+
 More information about the options can be obtained with the command:
 ```
 python3 -m openpifpaf.eval --help
