@@ -11,6 +11,7 @@ from .. import attribute
 from .. import encoder
 from .. import headmeta
 from .. import metrics as eval_metrics
+from .. import sampler
 
 
 class Jaad(openpifpaf.datasets.DataModule):
@@ -25,6 +26,7 @@ class Jaad(openpifpaf.datasets.DataModule):
     train_set = 'train'
     val_set = 'val'
     test_set = 'test'
+    subepochs = 1
 
     # Tasks
     pedestrian_attributes = ['detection']
@@ -87,6 +89,9 @@ class Jaad(openpifpaf.datasets.DataModule):
                            default=cls.test_set,
                            choices=['val', 'test'],
                            help='testing set')
+        group.add_argument('--jaad-subepochs',
+                           default=cls.subepochs, type=int,
+                           help='number of subepochs with sub-sampling')
 
         # Tasks
         group.add_argument('--jaad-pedestrian-attributes',
@@ -134,6 +139,7 @@ class Jaad(openpifpaf.datasets.DataModule):
         cls.train_set = args.jaad_training_set
         cls.val_set = args.jaad_validation_set
         cls.test_set = args.jaad_testing_set
+        cls.subepochs = args.jaad_subepochs
 
         # Tasks
         cls.pedestrian_attributes = args.jaad_pedestrian_attributes
@@ -198,10 +204,15 @@ class Jaad(openpifpaf.datasets.DataModule):
             subset=self.subset,
             preprocess=self._train_preprocess(),
         )
+        subsampler = sampler.RegularSubSampler(
+            len(train_data),
+            subepochs=self.subepochs,
+            shuffle=(not self.debug) and self.augmentation
+        )
         return torch.utils.data.DataLoader(
             train_data,
             batch_size=self.batch_size,
-            shuffle=(not self.debug) and self.augmentation,
+            sampler=subsampler,
             pin_memory=self.pin_memory,
             num_workers=self.loader_workers,
             drop_last=True,
