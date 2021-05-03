@@ -93,6 +93,9 @@ class AttributeLoss(torch.nn.Module):
 
 
     def compute_loss(self, x, t):
+        if t is None:
+            return None
+
         c_x = x.shape[1]
         x = x.permute(0,2,3,1).reshape(-1, c_x)
         c_t = t.shape[1]
