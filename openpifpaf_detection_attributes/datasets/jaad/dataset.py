@@ -92,6 +92,7 @@ class JaadDataset(torch.utils.data.Dataset):
             ped['object_type'] = JaadType.PEDESTRIAN
             ped['id'] = ped_id
             ped_anns = self.db[ids['video_name']]['ped_annotations'][ped_id]
+
             # General
             ped['confidence'] = 1
             ped['box'] = [ # x, y, w, h
@@ -107,6 +108,7 @@ class JaadDataset(torch.utils.data.Dataset):
             ped['occlusion'] = ped_anns['occlusion'][seq_id] #0: no occlusion, 1: partial occlusion (>25%), 2: full occlusion (>75%)
             ped['with_behavior'] = True if ped_id[-1]=='b' else False
             ped['ignore_eval'] = True if ped_id[-1]=='p' else False
+
             # Crossing
             if 'cross' in ped_anns['behavior']:
                 crossing_behavior = ped_anns['behavior']['cross']
@@ -116,14 +118,22 @@ class JaadDataset(torch.utils.data.Dataset):
             else:
                 ped['will_cross'] = 0
                 ped['is_crossing'] = 0
+            ped['frames_to_crossing'] = None
+            ped['time_to_crossing'] = None
             if ped['will_cross'] == 1:
-                cross_t = next(t for t in range(len(crossing_behavior))
-                               if crossing_behavior[t]==1) # start crossing
-                ped['frames_to_crossing'] = cross_t - seq_id
-                ped['time_to_crossing'] = (cross_t - seq_id) / 30. # conversion to seconds at 30fps
-            else:
-                ped['frames_to_crossing'] = None
-                ped['time_to_crossing'] = None
+                cross_idx = next(t for t in range(len(crossing_behavior))
+                                 if crossing_behavior[t]==1) # start crossing
+                assert crossing_behavior[cross_idx] == 1
+                # Only annotate if start of crossing is observed
+                if (
+                    (cross_idx > 0)
+                    and (ped_anns['frames'][cross_idx] - ped_anns['frames'][cross_idx-1] == 1)
+                    and (crossing_behavior[cross_idx-1] == 0)
+                ):
+                    cross_frame = ped_anns['frames'][cross_idx]
+                    ped['frames_to_crossing'] = cross_frame - ids['frame_id']
+                    ped['time_to_crossing'] = ped['frames_to_crossing'] / 30. # conversion to seconds at 30fps
+
             # Behavior
             for tag in ['hand_gesture', 'look', 'nod', 'reaction']:
                 ped[tag] = (
@@ -136,6 +146,7 @@ class JaadDataset(torch.utils.data.Dataset):
                 int(ped_anns['behavior']['action'][seq_id])
                 if 'action' in ped_anns['behavior'] else None
             )
+
             # Attributes
             for tag in ['age', 'gender', 'group_size', 'motion_direction']:
                 ped[tag] = (
@@ -158,6 +169,7 @@ class JaadDataset(torch.utils.data.Dataset):
                 ped['group_size'] -= 1
                 if ped['group_size'] > 3:
                     ped['group_size'] = 3
+
             # Appearance
             if ('frames' in ped_anns['appearance']
                     and ids['frame_id'] in ped_anns['appearance']['frames']):
@@ -178,6 +190,7 @@ class JaadDataset(torch.utils.data.Dataset):
                         and app_seq_id is not None)
                     else None
                 )
+
             # Add pedestrian
             anns.append(ped)
 
