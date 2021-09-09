@@ -1,6 +1,6 @@
 # Object Detection and Attribute Recognition with Fields
 
-A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestrian Attributes for Autonomous Vehicles](https://arxiv.org/abs/2012.02647) by Taylor Mordan (EPFL/VITA), Matthieu Cord (Sorbonne Université, valeo.ai), Patrick Pérez (valeo.ai) and Alexandre Alahi (EPFL/VITA).
+[PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestrian Attributes for Autonomous Vehicles](https://arxiv.org/abs/2012.02647) by Taylor Mordan (EPFL/VITA), Matthieu Cord (Sorbonne Université, valeo.ai), Patrick Pérez (valeo.ai) and Alexandre Alahi (EPFL/VITA).
 
 
 #### Abstract
@@ -8,7 +8,7 @@ A [PyTorch](https://pytorch.org/) implementation of paper [Detecting 32 Pedestri
 > Detecting 32 Pedestrian Attributes for Autonomous Vehicles
 >
 >Pedestrians are arguably one of the most safety-critical road users to consider for autonomous vehicles in urban areas.
->In this paper, we address the problem of jointly detecting pedestrians and recognizing 32 pedestrian attributes.
+>In this paper, we address the problem of jointly detecting pedestrians and recognizing 32 pedestrian attributes from a single image.
 >These encompass visual appearance and behavior, and also include the forecasting of road crossing, which is a main safety concern.
 >For this, we introduce a Multi-Task Learning (MTL) model relying on a composite field framework, which achieves both goals in an efficient way.
 >Each field spatially locates pedestrian instances and aggregates attribute predictions over them.
@@ -178,11 +178,12 @@ Office (https://tto.epfl.ch/, info.tto@epfl.ch).
 
 If you use this project in your research, please cite the corresponding paper:
 ```text
-@article{mordan2020detecting,
+@article{mordan2021detecting,
   title={Detecting 32 Pedestrian Attributes for Autonomous Vehicles},
   author={Mordan, Taylor and Cord, Matthieu and P{\'e}rez, Patrick and Alahi, Alexandre},
-  journal={arXiv preprint arXiv:2012.02647},
-  year={2020}
+  journal={IEEE Transactions on Intelligent Transportation Systems (T-ITS)},
+  year={2021},
+  doi={10.1109/TITS.2021.3107587}
 }
 ```
 
