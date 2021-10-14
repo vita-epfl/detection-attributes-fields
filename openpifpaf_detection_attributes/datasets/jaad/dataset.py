@@ -202,6 +202,7 @@ class JaadDataset(torch.utils.data.Dataset):
             'frame_id': ids['frame_id'],
             'image_id': ids['video_name'] + '/' + ids['image_name'],
             'local_file_path': local_file_path,
+            'file_name': local_file_path,
         }
 
         # Preprocess image and annotations

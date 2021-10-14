@@ -6,6 +6,7 @@ from typing import List
 import numpy as np
 import openpifpaf
 from scipy.special import softmax
+import torch
 
 from .. import optics
 from ...datasets import annotation
@@ -99,6 +100,9 @@ class InstanceDecoder(openpifpaf.decoder.decoder.Decoder):
 
     def __call__(self, fields, initial_annotations=None):
         start = time.perf_counter()
+
+        # Conversion to numpy if needed
+        fields = [f.numpy() if torch.is_tensor(f) else f for f in fields]
 
         # Field S
         s_meta = [meta for meta in self.attribute_metas

@@ -3,7 +3,7 @@ import logging
 
 import torch
 
-from .head import AttributeField
+from ...datasets import headmeta
 
 
 LOG = logging.getLogger(__name__)
@@ -13,25 +13,23 @@ class AttributeLoss(torch.nn.Module):
     """Loss function for attribute fields.
 
     Args:
-        head_net (AttributeField): Prediction head network corresponding to the
-            attribute.
+        head_meta (AttributeMeta): Meta information on attribute to predict.
     """
 
     regression_loss = 'l1'
     focal_gamma = 0.0
 
 
-    def __init__(self, head_net: AttributeField):
+    def __init__(self, head_meta: headmeta.AttributeMeta):
         super().__init__()
-        self.meta = head_net.meta
-        self.field_names = ['{}.{}'.format(head_net.meta.dataset,
-                                              head_net.meta.name)]
+        self.meta = head_meta
+        self.field_names = ['{}.{}'.format(head_meta.dataset,
+                                           head_meta.name)]
         self.previous_loss = None
 
         LOG.debug('attribute loss for %s: %s, %d channels',
                   self.meta.attribute,
-                  ('classification'
-                   if self.meta.is_classification
+                  ('classification' if self.meta.is_classification
                    else 'regression'),
                   self.meta.n_channels)
 
@@ -43,7 +41,8 @@ class AttributeLoss(torch.nn.Module):
                 return torch.nn.BCEWithLogitsLoss(reduction='none')
             elif self.meta.n_channels > 1:
                 loss_module = torch.nn.CrossEntropyLoss(reduction='none')
-                return lambda x, t: loss_module(x, t.to(torch.long).squeeze(1)).unsqueeze(1)
+                return lambda x, t: loss_module(
+                        x, t.to(torch.long).squeeze(1)).unsqueeze(1)
             else:
                 raise Exception('error in attribute classification format:'
                                 ' size {}'.format(self.meta.n_channels))

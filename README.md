@@ -54,7 +54,7 @@ All dependencies can be found in the `requirements.txt` file.
 pip3 install -r requirements.txt
 ```
 
-This project has been tested with Python 3.7.7, PyTorch 1.8.1 and CUDA 10.2.
+This project has been tested with Python 3.7.7, PyTorch 1.9.1, CUDA 10.2 and OpenPifPaf 0.13.0.
 
 
 ## Dataset
@@ -128,10 +128,11 @@ python3 -m openpifpaf.eval \
   --jaad-subset default \
   --jaad-testing-set test \
   --checkpoint <path/to/checkpoint.pt> \
-  --batch-size 4 \
+  --batch-size 1 \
   --jaad-head-upsample 2 \
   --jaad-pedestrian-attributes all \
   --head-consolidation filter_and_extend \
+  --decoder instancedecoder:0 \
   --decoder-s-threshold 0.2 \
   --decoder-optics-min-cluster-size 10 \
   --decoder-optics-epsilon 5.0 \
