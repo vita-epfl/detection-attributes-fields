@@ -26,7 +26,7 @@ class ForkNormNetwork(openpifpaf.network.basenetworks.BaseNetwork):
     def __init__(self, name: str, backbone_name: str):
         if self.pifpaf_pretraining:
             # Load pre-trained weights
-            LOG.info('Loading weights from pifpaf pretrained model')
+            LOG.info('Loading weights from OpenPifPaf trained model')
             network_factory = openpifpaf.network.Factory()
             network_factory.checkpoint = backbone_name
             pretrained_net, _ = network_factory.from_checkpoint()
